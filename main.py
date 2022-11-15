@@ -5,56 +5,56 @@ import PySimpleGUI as sg
 import numpy as np
 import csv
 
-#Deklarasi beberapa variabel global
+#Declare global variables
 fig = plt.figure(dpi = 96, figsize = (9,5))
 fig.subplots_adjust(bottom=0.21, left=0.1, right=0.925)
 temp1, temp2, temp3, temp4 = [], [], [], []
-tanggal, waktu = [], []
+date, time = [], []
 
-#Atur ulang figure matplotlib
+#Reset matplotlib figure
 def resetFigure():
     plt.clf()
-    plt.suptitle("Data Suhu", fontsize = 20)
-    plt.xlabel("Waktu",fontsize = 16)
-    plt.ylabel("Suhu (C)", fontsize = 16)
+    plt.suptitle("Temp Data", fontsize = 20)
+    plt.xlabel("Time",fontsize = 16)
+    plt.ylabel("Temp (C)", fontsize = 16)
     plt.ylim(20,80)
 
-#Update Grafik Matplotlib
+#Update matplotlib graph
 def updateFigure(filePath):
 
-    #Buka file csv
+    #Open csv file
     with open(filePath) as f:
         reader = csv.reader(f)
         
         #TODO
-        #Cek apakah jumlah kolom adalah 6, jika tidak maka file csv tidak dibaca
+        #Checks whether the number of columns is 6, otherwise the csv file will not be read
         ncol = len(next(reader))
         f.seek(0)
         if ncol != 6:
-            sg.popup("Jumlah Kolom file csv tidak sesuai!"
-                    + "\nMohon pilih kembali file")
+            sg.popup("The Column Count of the csv file doesn't match!"
+                    + "\nPlease choose another file")
             pass
 
-        #Baca data tiap baris dan di proses menjadi list
+        #Read the data for each row and process it into a list
         for row in reader:
 
-            #Lewati baris jika ada nilai kosong
+            #Skip the line if there is an empty value
             if not (row):
                 continue
             
-            #Data timestamp waktu dan tanggal
-            dataTanggal = dt.strptime(row[0], "%m/%d/%Y")
-            tanggal.append(dataTanggal)
-            dataWaktu = dt.strptime(row[1], "%I:%M:%S %p")
-            waktu.append(dataWaktu)
+            #Timestamp data for time and date
+            dateData = dt.strptime(row[0], "%m/%d/%Y")
+            date.append(dateData)
+            timeData = dt.strptime(row[1], "%I:%M:%S %p")
+            time.append(timeData)
 
-            #Subjudul grafik
-            plt.title(tanggal[0].strftime("%d-%m-%Y") + " " 
-                        + waktu[0].strftime("%I:%M:%S %p") + " Sampai Dengan " 
-                        + tanggal[-1].strftime("%d-%m-%Y") + " " 
-                        + waktu[-1].strftime("%I:%M:%S %p"), fontsize=12)
+            #Graph subtitle
+            plt.title(date[0].strftime("%d-%m-%Y") + " " 
+                        + time[0].strftime("%I:%M:%S %p") + " Until " 
+                        + date[-1].strftime("%d-%m-%Y") + " " 
+                        + time[-1].strftime("%I:%M:%S %p"), fontsize=12)
 
-            #Data suhu
+            #Temp data
             dataTemp1 = float(row[2])
             temp1.append(dataTemp1)
             dataTemp2 = float(row[3])
@@ -64,20 +64,20 @@ def updateFigure(filePath):
             dataTemp4 = float(row[5])
             temp4.append(dataTemp4)
 
-    #ambil rata 8 data dari array waktu untuk ticker x axis
-    #Jika data kurang dari 8 maka ticker waktu tidak ditampilkan
-    jumlahXTicker = 8
-    if len(waktu) >= jumlahXTicker:
+    #Take average of 8 data from time array for x axis ticker
+    #If the data is less than 8 then the time ticker is not displayed
+    XTickerSum = 8
+    if len(time) >= XTickerSum:
         xTicker = []
         idx = []
-        idx = np.round((np.linspace(0, len(waktu) - 1, jumlahXTicker))
+        idx = np.round((np.linspace(0, len(time) - 1, XTickerSum))
                         .astype(int).tolist())
         for x in idx:
-            xTicker.append(waktu[x].strftime("%I:%M:%S %p"))
+            xTicker.append(time[x].strftime("%I:%M:%S %p"))
         plt.xticks(ticks=idx, labels=xTicker, rotation=35)
 
-    #Kalau data suhu lebih dari 80 derajat c, graph tidak ditampilkan
-    #Data lebih dari 1700 derajat c karena sensor rusak atau belum terpasang
+    #If the temperature data is more than 80 degrees c, the graph is not displayed
+    #Data over 1700 degrees c because the sensor is damaged or not installed
     if dataTemp1 <= 80:
         plt.plot(temp1, color="red", label="Temp 1")
     if dataTemp2 <= 80:
@@ -87,16 +87,16 @@ def updateFigure(filePath):
     if dataTemp4 <= 80:
         plt.plot(temp4, color="#cccc00", label="Temp 4")
     
-    #Beri legend untuk plot figure
+    #Add legend for plot figure
     plt.legend()
     
-    #Tampilkan figure matplotlib pada kanvas PySimpleGUI
+    #Display the matplotlib figure on the PySimpleGUI canvas
     figure_canvas_agg.draw()
     figure_canvas_agg.get_tk_widget().pack()
 
-    #Hapus semua elemen list untuk figure selanjutnya
-    tanggal.clear()
-    waktu.clear()
+    #Remove all list elements for the next figure
+    date.clear()
+    time.clear()
     temp1.clear()
     temp2.clear()
     temp3.clear()
@@ -107,23 +107,23 @@ sg.theme("DarkTeal6")
 layout = [
     [sg.Canvas(key="-CANVAS-")],
     [sg.Input(key="-INPUT-",expand_x = True, disabled=True),
-        sg.Button("Buka File", key="-OPEN-"),
-        sg.Button("Simpan Gambar", key="-SAVE-")
+        sg.Button("Open File", key="-OPEN-"),
+        sg.Button("Save Image", key="-SAVE-")
     ]
 ]
 
-#Window utama
+#Main Window
 window = sg.Window("Data Logger", layout, location=(200,100), finalize = True)
 
-#Koneksi elemen Matplotlib ke PySimpleGUI
+#Matplotlib element connection to PySimpleGUI
 figure_canvas_agg = FigureCanvasTkAgg(fig, window["-CANVAS-"].TKCanvas)
 
-#Tampilkan blank figure
+#Show blank figure
 resetFigure()
 figure_canvas_agg.draw()
 figure_canvas_agg.get_tk_widget().pack()
 
-#Loop window utama
+#Main window loop
 #try:
 while True:
     event,values = window.read()
@@ -131,14 +131,14 @@ while True:
         break
     
     if event == "-SAVE-":
-        savePath = sg.popup_get_file("Simpan Gambar", 
+        savePath = sg.popup_get_file("Save Image", 
                     file_types=(("Portable Network Graphics", "*.png"),), 
                     save_as=True, no_window=True)
         plt.savefig(savePath)
     
     if event == "-OPEN-":
-        filePath = sg.popup_get_file("Buka File CSV",
-                    title="Buka File CSV", 
+        filePath = sg.popup_get_file("Open CSV File",
+                    title="Open CSV File", 
                     file_types=(("Comma Separated Value", "*.csv"),),
                     no_window=True)
         if filePath:
