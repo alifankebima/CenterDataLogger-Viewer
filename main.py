@@ -147,6 +147,6 @@ while True:
             window["-INPUT-"].update(filePath)
 
 #except Exception as e:
-#    sg.popup_error_with_traceback(f"Terjadi Kesalahan!", e)
+#    sg.popup_error_with_traceback(f"Error Occured!", e)
 
 window.close()
